@@ -1,5 +1,5 @@
-within AnomalyLibrary.UsersGuide;
-class Limitations "Use only within the component assumptions and the documented evidence coverage."
+within EvaluationLibrary.UsersGuide;
+class Limitations "Observation and numerical limits"
   extends Modelica.Icons.Information;
-  annotation(Documentation(info="<html><p>Use only within the component assumptions and the documented evidence coverage.</p></html>"));
+  annotation(Documentation(info="<html><p>Sampled extrema and checks describe the configured sample grid; they do not establish continuous extrema. Frequency analysis uses finite records and depends on sample rate, record length and weighting. Finite candidate comparisons do not establish a global worst case or a probability. Engineering grades and levels are defined by user-selected thresholds.</p><p>Event queues and retained histories are bounded. Overflow invalidates the affected evidence. Single externally gated windows do not support repeated trials within one instance. Invalidity and early-stop handling depend on the producing block; inspect the structured result rather than assuming that a raw metric or internal status has the same qualification.</p><p>File output depends on the simulation process having access to the destination. File errors may stop a run without changing a computed verdict. The library requires Modelica Standard Library 4.0.0; tool-specific execution and output behaviour should be checked in the intended simulation environment.</p></html>"));
 end Limitations;

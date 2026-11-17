@@ -1,5 +1,5 @@
-within AnomalyLibrary.UsersGuide;
-class Conventions "Use the units and connection directions declared on each component."
+within EvaluationLibrary.UsersGuide;
+class Conventions "Units, observation windows and result interpretation"
   extends Modelica.Icons.Information;
-  annotation(Documentation(info="<html><p>Use the units and connection directions declared on each component.</p></html>"));
+  annotation(Documentation(info="<html><p>Use consistent engineering units for each signal, reference and bound. Unit strings in result metadata describe values; they do not convert units. Wrapped angular differences use radians. Observation windows are half-open: the start is included and the stop is excluded.</p><p><code>dataStatus</code> describes observation quality; <code>verdict</code> describes a requirement outcome. <code>complete</code> means collection has closed. Read numerical and optional fields only when their availability flags permit it. Continuous checks, sampled statistics and event measurements retain distinct meanings.</p><p>Result connectors use integer status and verdict codes; the corresponding record uses enumerations. Overall verdicts exclude optional and not-applicable entries, then apply the priority <code>INVALID</code>, <code>VIOLATED</code>, <code>UNDECIDED</code>, <code>SATISFIED</code>. A stored violation flag is retained even if the overall evidence becomes invalid.</p></html>"));
 end Conventions;

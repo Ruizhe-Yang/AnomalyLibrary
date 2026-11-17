@@ -1,0 +1,16 @@
+ControlEffort
+EnergyEfficiency
+GatedPeak
+Integral
+LinearTrend
+SampledMoments
+SampleExtrema
+SampleMean
+SampleRMS
+SampleVariance
+SignalAssessment
+TimeMean
+TimeRMS
+TimeVariance
+TotalVariation
+ZeroCrossingOscillation

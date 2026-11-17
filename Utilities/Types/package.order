@@ -1,1 +1,16 @@
-FrameMode
+AssessmentDirection
+DataStatus
+EventMode
+EventRole
+EvidenceKind
+Grade
+InputInterpretation
+MetricResult
+NumericComparison
+ReportFormat
+Sense
+SpectralWindow
+Taper
+Verdict
+WindowMode
+WritePolicy
