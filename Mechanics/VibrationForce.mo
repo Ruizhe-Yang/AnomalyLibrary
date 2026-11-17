@@ -1,16 +1,16 @@
 within AnomalyLibrary.Mechanics;
-model VibrationForce "施加给定频率的外部振动载荷"
-  parameter Boolean enabled = true "为 false 时整个运行处于名义状态";
-  parameter Modelica.Units.SI.Time eventStartTime = 2 "开始时刻，包含";
-  parameter Modelica.Units.SI.Time eventEndTime = 4 "结束时刻，不包含";
-  Modelica.Blocks.Interfaces.BooleanOutput active "事件窗有效" annotation(Placement(transformation(extent={{94,18},{106,30}}), iconTransformation(extent={{94,18},{106,30}})));
-  parameter Modelica.Units.SI.Force amplitude = 10 "力幅值，N";
-  parameter Modelica.Units.SI.Frequency frequency(min=0) = 10 "频率，Hz";
-  Modelica.Mechanics.Translational.Interfaces.Flange_b flange "受外力的平动节点" annotation(Placement(transformation(extent={{-7,-107},{7,-93}}), iconTransformation(extent={{-7,-107},{7,-93}})));
-  Modelica.Blocks.Interfaces.RealOutput appliedForce(unit="N") "沿坐标正向施加为正" annotation(Placement(transformation(extent={{94,-30},{106,-18}}), iconTransformation(extent={{94,-30},{106,-18}})));
+model VibrationForce "Sinusoidal external force during a scheduled interval"
+  parameter Boolean enabled = true "Enable the configured disturbance";
+  parameter Modelica.Units.SI.Time eventStartTime = 2 "Inclusive start of the event interval";
+  parameter Modelica.Units.SI.Time eventEndTime = 4 "Exclusive end of the event interval";
+  Modelica.Blocks.Interfaces.BooleanOutput active "The scheduled vibration interval is active" annotation(Placement(transformation(extent={{94,18},{106,30}}), iconTransformation(extent={{94,18},{106,30}})));
+  parameter Modelica.Units.SI.Force amplitude = 10 "Amplitude of the sinusoidal applied force";
+  parameter Modelica.Units.SI.Frequency frequency(min=0) = 10 "Sinusoidal frequency";
+  Modelica.Mechanics.Translational.Interfaces.Flange_b flange "Driven translational flange" annotation(Placement(transformation(extent={{-7,-107},{7,-93}}), iconTransformation(extent={{-7,-107},{7,-93}})));
+  Modelica.Blocks.Interfaces.RealOutput appliedForce(unit="N") "Force applied along the positive flange coordinate" annotation(Placement(transformation(extent={{94,-30},{106,-18}}), iconTransformation(extent={{94,-30},{106,-18}})));
 protected
-  Modelica.Mechanics.Translational.Sources.Force source;
-  AnomalyLibrary.Utilities.Internal.EventActivation eventWindow(enabled=enabled,eventStartTime=eventStartTime,eventEndTime=eventEndTime);
+  Modelica.Mechanics.Translational.Sources.Force source "Ideal prescribed force source";
+  AnomalyLibrary.Utilities.Internal.EventActivation eventWindow(enabled=enabled,eventStartTime=eventStartTime,eventEndTime=eventEndTime) "Scheduled event interval";
 initial equation
   assert(frequency >= 0, "Frequency must be nonnegative.");
 equation
@@ -29,25 +29,5 @@ equation
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
     Diagram(coordinateSystem(extent={{-100,-100},{100,100}}, preserveAspectRatio=true), graphics={Text(extent={{-96,99},{96,88}}, textColor={145,57,25}, textString="VibrationForce")}),
-    Documentation(info="<html><p><b>Purpose</b> 施加给定频率的外部振动载荷</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanOutput active \"事件窗有效\"; Modelica.Mechanics.Translational.Interfaces.Flange_b flange \"受外力的平动节点\"; Modelica.Blocks.Interfaces.RealOutput appliedForce(unit=\"N\") \"沿坐标正向施加为正\"</p><p><b>Parameters</b> parameter Boolean enabled = true \"为 false 时整个运行处于名义状态\"; parameter Modelica.Units.SI.Time eventStartTime = 2 \"开始时刻，包含\"; parameter Modelica.Units.SI.Time eventEndTime = 4 \"结束时刻，不包含\"; parameter Modelica.Units.SI.Force amplitude = 10 \"力幅值，N\"; parameter Modelica.Units.SI.Frequency frequency(min=0) = 10 \"频率，Hz\"</p><p><b>Behavior</b> 施加给定频率的外部振动载荷</p><p><b>Initialization</b> Use the declared initial values and host state modifiers.</p><p><b>Activation and recovery</b> Use the declared activation inputs and timing.</p><p><b>Limitations</b> Use the declared parameter range. The catalog identifies simulation coverage.</p><p><b>Observables</b> Inspect the declared output variables.</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">AnomalyLibrary.Examples.MechanicalImpulseAndContact</a></p>
-<p>施加给定频率的外部振动载荷</p>
-<p>专业分类为 MechanicalEvents.ExternalLoads。</p>
-<p>接口与方向</p>
-<ul>
-<li><code>Modelica.Blocks.Interfaces.BooleanOutput active \"事件窗有效\"</code></li>
-<li><code>Modelica.Mechanics.Translational.Interfaces.Flange_b flange \"受外力的平动节点\"</code></li>
-<li><code>Modelica.Blocks.Interfaces.RealOutput appliedForce(unit=\"N\") \"沿坐标正向施加为正\"</code></li>
-</ul>
-<p>参数、类型、默认值及约束</p>
-<ul>
-<li><code>Boolean enabled = true \"为 false 时整个运行处于名义状态\"</code></li>
-<li><code>Modelica.Units.SI.Time eventStartTime = 2 \"开始时刻，包含\"</code></li>
-<li><code>Modelica.Units.SI.Time eventEndTime = 4 \"结束时刻，不包含\"</code></li>
-<li><code>Modelica.Units.SI.Force amplitude = 10 \"力幅值，N\"</code></li>
-<li><code>Modelica.Units.SI.Frequency frequency(min=0) = 10 \"频率，Hz\"</code></li>
-</ul>
-<p><b>时序与基准行为</b> 从事件开始计相位，退出后卸载。</p>
-<p><b>最小用法</b> 把 flange 接质量块，施力由外界供给。 <a href=\"modelica://AnomalyLibrary.Examples.CombinedAnomalies\">MechanicalImpactEvent</a> 展示同域接线。</p>
-<p><b>适用边界</b> 频率非负。窗口终点若不在零交点，可产生瞬时卸载。</p>
-</html>"));
+    Documentation(info="<html><p>With <code>enabled=true</code>, the applied force is <code>amplitude*sin(2*pi*frequency*(time-eventStartTime))</code> during <code>[eventStartTime,eventEndTime)</code> and zero otherwise. The phase starts at the scheduled event boundary. There is no activation ramp, so termination away from a zero crossing causes a force step. <code>appliedForce</code> is positive along the flange coordinate.</p><p>Connect flange to a translational body and set amplitude, frequency and the event interval.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">MechanicalImpulseAndContact</a> for connections.</p></html>"));
 end VibrationForce;

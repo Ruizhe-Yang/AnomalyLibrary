@@ -1,28 +1,28 @@
 within AnomalyLibrary.Mechanics;
-model RotationalTorque "Apply a finite specified external torque"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model RotationalTorque "Prescribed external torque disturbance"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Boolean useSupport=false;
-  Modelica.Mechanics.Rotational.Interfaces.Flange_b flange annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Mechanics.Rotational.Interfaces.Support support if useSupport annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.Torque applied;
-  Modelica.Units.SI.Power externalPower;
-  parameter Modelica.Units.SI.Torque torque=1;
+  parameter Boolean useSupport=false "Expose the reaction support";
+  Modelica.Mechanics.Rotational.Interfaces.Flange_b flange "Driven rotational flange" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Mechanics.Rotational.Interfaces.Support support if useSupport "Reaction support; a fixed reference is used when omitted" annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.Torque applied "Torque applied to the connected shaft";
+  Modelica.Units.SI.Power externalPower "Signed power supplied to the connected system";
+  parameter Modelica.Units.SI.Torque torque=1 "Torque applied at full effect";
 
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  Modelica.Units.SI.Angle reference;
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  Modelica.Units.SI.Angle reference "Support angle or fixed-world reference";
 
 equation
   connect(trigger,gate.externalTrigger);
@@ -49,5 +49,5 @@ equation
         Text(extent={{-43,76},{37,48}}, textString="tau", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Apply a finite specified external torque.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Mechanics.Rotational.Interfaces.Flange_b flange</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Boolean useSupport=false; parameter Modelica.Units.SI.Torque torque=1</p><p><b>Behavior</b> Apply a finite specified external torque</p><p><b>Initialization</b> Evaluated from the current inputs and parameter bindings.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Positive effort acts in the positive flange coordinate. Support carries the equal reaction or a fixed world reference. </p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">AnomalyLibrary.Examples.MechanicalImpulseAndContact</a></p></html>"));
+    Documentation(info="<html><p>The applied torque is <code>torque*effectLevel</code>; positive torque acts in the positive flange coordinate. The source flange carries the opposite connector torque. An exposed support carries the equal reaction; otherwise the reference angle is fixed at zero. <code>externalPower</code> reports signed power relative to that reference.</p><p>Connect flange to the driven shaft and enable useSupport when its reaction must be modelled. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">MechanicalImpulseAndContact</a> for connections.</p></html>"));
 end RotationalTorque;

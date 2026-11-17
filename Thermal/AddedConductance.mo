@@ -1,23 +1,23 @@
 within AnomalyLibrary.Thermal;
-model AddedConductance "Add a conservative heat transfer path"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model AddedConductance "Additional thermal conductance between two ports"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Modelica.Units.SI.ThermalConductance G(min=0)=1;
-  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a port_a annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port_b annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.HeatFlowRate heatFlow;
+  parameter Modelica.Units.SI.ThermalConductance G(min=0)=1 "Thermal conductance at full effect";
+  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a port_a "First thermal port" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port_b "Second thermal port" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.HeatFlowRate heatFlow "Heat flow from port_a to port_b";
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(G>=0,"Negative conductance.");
@@ -41,5 +41,5 @@ equation
         Text(extent={{-37,44},{37,70}}, textString="G+", textColor={191,0,0}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Add a conservative heat transfer path.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a port_a; Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port_b</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Modelica.Units.SI.ThermalConductance G(min=0)=1</p><p><b>Behavior</b> Add a conservative heat transfer path</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. The inactive extra path transfers zero heat.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">AnomalyLibrary.Examples.ThermalPulseAndEnvironment</a></p></html>"));
+    Documentation(info="<html><p>The heat flow from <code>port_a</code> to <code>port_b</code> is <code>effectLevel*G*(port_a.T-port_b.T)</code>. Equal and opposite port flows conserve energy through the connection. Zero effect removes the additional heat transfer; the component has no thermal storage.</p><p>Connect port_a and port_b to the two thermal nodes and set G. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">ThermalPulseAndEnvironment</a> for connections.</p></html>"));
 end AddedConductance;

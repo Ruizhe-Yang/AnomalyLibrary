@@ -1,13 +1,15 @@
-within EvaluationLibrary;
-package Signals "Signal transformations and data validity"
+within AnomalyLibrary;
+package Signals "Real and Boolean signal anomalies"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
-        Line(points={{-57.04,29.44},{-21.16,29.44}}, color={0,0,127}, thickness=1, pattern=LinePattern.Solid),
-        Line(points={{-57.04,-23.92},{-21.16,-23.92}}, color={0,0,127}, thickness=1, pattern=LinePattern.Solid),
-        Rectangle(extent={{-20.24,-36.8},{39.56,42.32}}, lineColor={64,64,64}, fillColor={255,255,255}, fillPattern=FillPattern.Solid, pattern=LinePattern.Solid, lineThickness=0.5, radius=0),
-        Text(extent={{-11.96,35.88},{30.36,-29.44}}, textString="Δ", textColor={0,0,127}, fontSize=0),
-        Line(points={{39.56,2.76},{60.72,2.76}}, color={0,0,127}, thickness=0.8, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled})
+        Line(points={{-58.88,0},{62.56,0}}, color={160,160,164}, thickness=0.5, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
+        Line(points={{0,-50.6},{0,53.36}}, color={160,160,164}, thickness=0.5, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
+        Line(points={{-51.52,-34.04},{50.6,34.04}}, color={160,160,164}, thickness=0.7, pattern=LinePattern.Dash),
+        Line(points={{-51.52,-11.04},{31.28,44.16}}, color={0,0,255}, thickness=1.4, pattern=LinePattern.Solid),
+        Line(points={{-32.2,-21.16},{-32.2,1.84}}, color={191,0,0}, thickness=0.9, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
+        Text(extent={{-27.6,-8.28},{-6.44,13.8}}, textString="b", textColor={64,64,64}, fontSize=0),
+        Text(extent={{-61.64,-68.08},{61.64,-45.08}}, textString="u + b", textColor={64,64,64}, fontSize=0)
       }));
-  annotation(Documentation(info="<html><p>Signal blocks for differences, relative and angular errors, sampled differentiation and input qualification. These blocks expose numerical outputs and validity flags without an observation-window verdict.</p></html>"));
+  annotation(Documentation(info="<html><p>This package provides real-signal distortions, Boolean command changes and measurement dropouts. Connect a nominal source to <code>u</code> and use <code>y</code> downstream; blocks that expose <code>valid</code> distinguish imposed loss from their numeric fallback.</p><p>Most blocks use <code>enabled</code>, <code>startTime</code>, <code>endTime</code> and optional external triggering. <code>IntermittentLoss</code>, <code>NoiseInjection</code>, <code>PolarityReversal</code>, <code>SinusoidalInterference</code> and <code>Spike</code> instead use <code>eventStartTime</code> and <code>eventEndTime</code>, and are enabled by default. Read the selected class documentation for recovery and command-state behaviour.</p><p>Begin with <a href=\"modelica://AnomalyLibrary.Examples.SignalDeviationAndRecovery\">SignalDeviationAndRecovery</a> or <a href=\"modelica://AnomalyLibrary.Examples.UnsafeCommandPatterns\">UnsafeCommandPatterns</a>.</p></html>"));
 end Signals;

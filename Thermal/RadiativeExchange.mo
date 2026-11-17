@@ -1,24 +1,24 @@
 within AnomalyLibrary.Thermal;
-model RadiativeExchange "Exchange radiation with an explicit absolute environment temperature"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model RadiativeExchange "Radiative heat exchange with a prescribed environment"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Real emissivity(min=0,max=1)=0.8;
-  parameter Modelica.Units.SI.Area area(min=0)=0.2;
-  parameter Modelica.Units.SI.Temperature environment(min=0)=320;
-  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.HeatFlowRate heatFlow;
+  parameter Real emissivity(min=0,max=1)=0.8 "Effective surface emissivity";
+  parameter Modelica.Units.SI.Area area(min=0)=0.2 "Radiating area";
+  parameter Modelica.Units.SI.Temperature environment(min=0)=320 "Prescribed absolute environment temperature";
+  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port "Thermal connection to the affected body" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.HeatFlowRate heatFlow "Heat flow supplied to the connected system";
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(emissivity>=0 and emissivity<=1 and area>=0 and environment>=0,"Invalid radiation boundary.");
@@ -42,5 +42,5 @@ equation
         Text(extent={{-48,49},{47,77}}, textString="T^4", textColor={191,0,0}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Exchange radiation with an explicit absolute environment temperature.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Real emissivity(min=0,max=1)=0.8; parameter Modelica.Units.SI.Area area(min=0)=0.2; parameter Modelica.Units.SI.Temperature environment(min=0)=320</p><p><b>Behavior</b> Exchange radiation with an explicit absolute environment temperature</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. This is a one-surface diffuse boundary with the stated effective emissivity.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">AnomalyLibrary.Examples.ThermalPulseAndEnvironment</a></p></html>"));
+    Documentation(info="<html><p>The supplied heat flow is <code>effectLevel*emissivity*sigma*area*(environment^4-port.T^4)</code>. Temperatures are absolute kelvin values. Positive <code>heatFlow</code> heats the body and negative flow cools it. The prescribed environment has no temperature dynamics, and zero effect removes this additional exchange.</p><p>Connect port to the radiating body and set its area, emissivity and environment temperature. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">ThermalPulseAndEnvironment</a> for connections.</p></html>"));
 end RadiativeExchange;

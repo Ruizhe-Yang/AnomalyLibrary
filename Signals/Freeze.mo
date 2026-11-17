@@ -1,22 +1,22 @@
 within AnomalyLibrary.Signals;
-block Freeze "Hold the value captured on the current activation edge"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
-  output Real held(start=0,fixed=true);
-  Modelica.Blocks.Interfaces.RealInput u annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput y annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+block Freeze "Hold the input captured at an activation onset"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
+  output Real held(start=0,fixed=true) "Input value captured at initialisation or an activation onset";
+  Modelica.Blocks.Interfaces.RealInput u "Nominal input signal" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput y "Output signal after the selected modification" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
 
@@ -41,5 +41,5 @@ equation
         Text(extent={{-67,-74},{67,-49}}, textString="hold", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Hold the value captured on the current activation edge.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; output Real held(start=0,fixed=true); Modelica.Blocks.Interfaces.RealInput u; Modelica.Blocks.Interfaces.RealOutput y</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; final parameter Modelica.Units.SI.Time transitionTime=0</p><p><b>Behavior</b> Hold the value captured on the current activation edge</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The optional trigger replaces the internal half-open window. A new activation updates the declared capture or command state.</p><p><b>Limitations</b> Input and output use the same units. The operation is deterministic.</p><p><b>Observables</b> active, effectLevel, activationCount, held, y</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.SignalDeviationAndRecovery\">AnomalyLibrary.Examples.SignalDeviationAndRecovery</a></p></html>"));
+    Documentation(info="<html><p>The block captures <code>u</code> at initialisation and at each rising edge of <code>active</code>. The output uses this held value while active and follows the current input immediately after deactivation.</p><p>Set <code>enabled=true</code> and <code>severity=1</code> to apply the effect, or <code>severity=0</code> to disable it. The internal window is <code>[startTime,endTime)</code>; <code>useExternalTrigger=true</code> selects <code>trigger</code> instead. Intermediate severities are not supported.</p></html>"));
 end Freeze;

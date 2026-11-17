@@ -1,20 +1,20 @@
 within AnomalyLibrary.Electrical;
-model SwitchedCapacitiveLoad "将带限流电阻的外部电容并入总线"
-  parameter Boolean enabled = true "为 false 时整个运行处于名义状态";
-  parameter Modelica.Units.SI.Time eventStartTime = 2 "开始时刻，包含";
-  parameter Modelica.Units.SI.Time eventEndTime = 4 "结束时刻，不包含";
-  Modelica.Blocks.Interfaces.BooleanOutput active "事件窗有效" annotation(Placement(transformation(extent={{94,-6},{106,6}}), iconTransformation(extent={{94,-6},{106,6}})));
-  Modelica.Electrical.Analog.Interfaces.PositivePin p "正参考端" annotation(Placement(transformation(extent={{-107,-7},{-93,7}}), iconTransformation(extent={{-107,-7},{-93,7}})));
-  Modelica.Electrical.Analog.Interfaces.NegativePin n "负参考端" annotation(Placement(transformation(extent={{93,-7},{107,7}}), iconTransformation(extent={{93,-7},{107,7}})));
-  Modelica.Units.SI.Voltage v "p 相对 n 的电压";
-  Modelica.Units.SI.Current i "流入 p 的电流";
-  parameter Modelica.Units.SI.Capacitance C(min=Modelica.Constants.small) = 0.01 "并入电容，F";
-  parameter Modelica.Units.SI.Resistance R(min=Modelica.Constants.small) = 0.5 "串联限流电阻，Ohm";
-  parameter Modelica.Units.SI.Voltage initialVoltage = 0 "电容初始电压，V";
+model SwitchedCapacitiveLoad "Capacitive load connected through a finite resistance"
+  parameter Boolean enabled = true "Enable the configured disturbance";
+  parameter Modelica.Units.SI.Time eventStartTime = 2 "Inclusive start of the event interval";
+  parameter Modelica.Units.SI.Time eventEndTime = 4 "Exclusive end of the event interval";
+  Modelica.Blocks.Interfaces.BooleanOutput active "The scheduled capacitor connection is active" annotation(Placement(transformation(extent={{94,-6},{106,6}}), iconTransformation(extent={{94,-6},{106,6}})));
+  Modelica.Electrical.Analog.Interfaces.PositivePin p "Positive electrical pin" annotation(Placement(transformation(extent={{-107,-7},{-93,7}}), iconTransformation(extent={{-107,-7},{-93,7}})));
+  Modelica.Electrical.Analog.Interfaces.NegativePin n "Negative electrical pin" annotation(Placement(transformation(extent={{93,-7},{107,7}}), iconTransformation(extent={{93,-7},{107,7}})));
+  Modelica.Units.SI.Voltage v "Voltage from p to n";
+  Modelica.Units.SI.Current i "Current entering pin p";
+  parameter Modelica.Units.SI.Capacitance C(min=Modelica.Constants.small) = 0.01 "Capacitance of the switched load";
+  parameter Modelica.Units.SI.Resistance R(min=Modelica.Constants.small) = 0.5 "Closed-contact current-limiting resistance";
+  parameter Modelica.Units.SI.Voltage initialVoltage = 0 "Initial capacitor voltage";
 protected
-  Modelica.Electrical.Analog.Ideal.IdealOpeningSwitch contact(Ron=R,Goff=0);
-  Modelica.Electrical.Analog.Basic.Capacitor capacitor(C=C,v(start=initialVoltage,fixed=true));
-  AnomalyLibrary.Utilities.Internal.EventActivation eventWindow(enabled=enabled,eventStartTime=eventStartTime,eventEndTime=eventEndTime);
+  Modelica.Electrical.Analog.Ideal.IdealOpeningSwitch contact(Ron=R,Goff=0) "Switch with finite closed resistance and zero open conductance";
+  Modelica.Electrical.Analog.Basic.Capacitor capacitor(C=C,v(start=initialVoltage,fixed=true)) "Capacitor retaining its voltage when disconnected";
+  AnomalyLibrary.Utilities.Internal.EventActivation eventWindow(enabled=enabled,eventStartTime=eventStartTime,eventEndTime=eventEndTime) "Scheduled event interval";
 initial equation
   assert(C > 0 and R > 0, "Capacitance and connection resistance must be positive.");
 equation
@@ -40,26 +40,5 @@ equation
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
     Diagram(coordinateSystem(extent={{-100,-100},{100,100}}, preserveAspectRatio=true), graphics={Text(extent={{-96,99},{96,88}}, textColor={145,57,25}, textString="SwitchedCapacitiveLoad")}),
-    Documentation(info="<html><p><b>Purpose</b> 将带限流电阻的外部电容并入总线</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanOutput active \"事件窗有效\"; Modelica.Electrical.Analog.Interfaces.PositivePin p \"正参考端\"; Modelica.Electrical.Analog.Interfaces.NegativePin n \"负参考端\"</p><p><b>Parameters</b> parameter Boolean enabled = true \"为 false 时整个运行处于名义状态\"; parameter Modelica.Units.SI.Time eventStartTime = 2 \"开始时刻，包含\"; parameter Modelica.Units.SI.Time eventEndTime = 4 \"结束时刻，不包含\"; parameter Modelica.Units.SI.Capacitance C(min=Modelica.Constants.small) = 0.01 \"并入电容，F\"; parameter Modelica.Units.SI.Resistance R(min=Modelica.Constants.small) = 0.5 \"串联限流电阻，Ohm\"; parameter Modelica.Units.SI.Voltage initialVoltage = 0 \"电容初始电压，V\"</p><p><b>Behavior</b> 将带限流电阻的外部电容并入总线</p><p><b>Initialization</b> Use the declared initial values and host state modifiers.</p><p><b>Activation and recovery</b> Use the declared activation inputs and timing.</p><p><b>Limitations</b> Use the declared parameter range. The catalog identifies simulation coverage.</p><p><b>Observables</b> Inspect the declared output variables.</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.ElectricalDisturbances\">AnomalyLibrary.Examples.ElectricalDisturbances</a></p>
-<p>将带限流电阻的外部电容并入总线</p>
-<p>专业分类为 ElectricalEvents.AdditionalCircuit。</p>
-<p>接口与方向</p>
-<ul>
-<li><code>Modelica.Blocks.Interfaces.BooleanOutput active \"事件窗有效\"</code></li>
-<li><code>Modelica.Electrical.Analog.Interfaces.PositivePin p \"正参考端\"</code></li>
-<li><code>Modelica.Electrical.Analog.Interfaces.NegativePin n \"负参考端\"</code></li>
-</ul>
-<p>参数、类型、默认值及约束</p>
-<ul>
-<li><code>Boolean enabled = true \"为 false 时整个运行处于名义状态\"</code></li>
-<li><code>Modelica.Units.SI.Time eventStartTime = 2 \"开始时刻，包含\"</code></li>
-<li><code>Modelica.Units.SI.Time eventEndTime = 4 \"结束时刻，不包含\"</code></li>
-<li><code>Modelica.Units.SI.Capacitance C(min=Modelica.Constants.small) = 0.01 \"并入电容，F\"</code></li>
-<li><code>Modelica.Units.SI.Resistance R(min=Modelica.Constants.small) = 0.5 \"串联限流电阻，Ohm\"</code></li>
-<li><code>Modelica.Units.SI.Voltage initialVoltage = 0 \"电容初始电压，V\"</code></li>
-</ul>
-<p><b>时序与基准行为</b> 激活后经有限电阻充放电。退出后零外部电流，电容保持其电压。</p>
-<p><b>最小用法</b> 并到有有限馈电阻抗的直流母线。 <a href=\"modelica://AnomalyLibrary.Examples.CombinedAnomalies\">ElectricalExternalShunt</a> 展示同域接线。</p>
-<p><b>适用边界</b> 状态与初始电压决定涌流。过小 RC 增加刚性。</p>
-</html>"));
+    Documentation(info="<html><p>A capacitor with fixed initial voltage is connected through an opening switch whose closed resistance is <code>R</code> and whose open conductance is zero. During <code>[eventStartTime,eventEndTime)</code>, <code>enabled=true</code> closes the contact. Outside that interval the external branch current is zero and the capacitor retains its voltage. Inrush depends on the initial voltage and connected network; small <code>R*C</code> can introduce a fast transient.</p><p>Connect p and n across a bus; set C, R, initialVoltage and the event interval.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.ElectricalDisturbances\">ElectricalDisturbances</a> for connections.</p></html>"));
 end SwitchedCapacitiveLoad;

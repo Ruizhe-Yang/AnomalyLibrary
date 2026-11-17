@@ -1,27 +1,27 @@
 within AnomalyLibrary.CrossDomain;
-model ElectricalHeating "Transfer the same electrical dissipation to the thermal port"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model ElectricalHeating "Additional electrical dissipation transferred to a thermal port"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  Modelica.Electrical.Analog.Interfaces.PositivePin p annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Electrical.Analog.Interfaces.NegativePin n annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-    Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a heatPort annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.Voltage v;
-  Modelica.Units.SI.Current i;
-  Modelica.Units.SI.Power lossPower;
-  parameter Modelica.Units.SI.Resistance R(min=0)=10;
+  Modelica.Electrical.Analog.Interfaces.PositivePin p "Positive electrical pin" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Electrical.Analog.Interfaces.NegativePin n "Negative electrical pin" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+    Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a heatPort "Thermal connection for electrical dissipation" annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.Voltage v "Voltage from p to n";
+  Modelica.Units.SI.Current i "Current entering pin p";
+  Modelica.Units.SI.Power lossPower "Electrical power dissipated in the branch";
+  parameter Modelica.Units.SI.Resistance R(min=0)=10 "Resistance of the added heating branch at full effect";
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(R>0,"Heating resistance must be positive.");
@@ -49,5 +49,5 @@ equation
         Line(points={{0,-65},{0,-100}}, color={191,0,0}, thickness=1, pattern=LinePattern.Solid),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Transfer the same electrical dissipation to the thermal port.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Electrical.Analog.Interfaces.PositivePin p; Modelica.Electrical.Analog.Interfaces.NegativePin n; Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_a heatPort</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Modelica.Units.SI.Resistance R(min=0)=10</p><p><b>Behavior</b> Transfer the same electrical dissipation to the thermal port</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Heat flow into the external network equals electrical dissipation.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.CrossDomainEffects\">AnomalyLibrary.Examples.CrossDomainEffects</a></p></html>"));
+    Documentation(info="<html><p>The electrical branch draws <code>i=effectLevel*(p.v-n.v)/R</code>. Its dissipated power <code>lossPower=v*i</code> is transferred unchanged through <code>heatPort.Q_flow=-lossPower</code>. At zero effect both the additional electrical current and thermal flow are zero. The model has no internal electrical or thermal storage.</p><p>Connect p and n as a parallel branch and connect heatPort to the receiving thermal network. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.CrossDomainEffects\">CrossDomainEffects</a> for connections.</p></html>"));
 end ElectricalHeating;

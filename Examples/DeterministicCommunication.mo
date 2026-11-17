@@ -1,15 +1,15 @@
 within AnomalyLibrary.Examples;
-model DeterministicCommunication "Compare four independent frame policies on a shared service grid"
+model DeterministicCommunication "Compare dropping, delay, reordering and duplication of frames"
   extends Modelica.Icons.Example;
-  AnomalyLibrary.Utilities.Internal.FrameSource transmitter(samplePeriod=0.1) annotation(Placement(transformation(origin={-246,0},extent={{-28,-28},{28,28}},rotation=0)));
-  AnomalyLibrary.Communication.FrameDropout drop(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,dropEveryN=3) annotation(Placement(transformation(origin={13,150},extent={{-26,-26},{26,26}},rotation=0)));
-  Modelica.Blocks.Interfaces.IntegerOutput dropId annotation(Placement(transformation(origin={239,150},extent={{-7,-7},{7,7}},rotation=0)));
-  AnomalyLibrary.Communication.FrameDelay delay(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,delayTime=0.2) annotation(Placement(transformation(origin={13,52},extent={{-26,-26},{26,26}},rotation=0)));
-  Modelica.Blocks.Interfaces.IntegerOutput delayId annotation(Placement(transformation(origin={239,52},extent={{-7,-7},{7,7}},rotation=0)));
-  AnomalyLibrary.Communication.FrameReorder reorder(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,pairTimeout=0.25) annotation(Placement(transformation(origin={13,-47},extent={{-26,-26},{26,26}},rotation=0)));
-  Modelica.Blocks.Interfaces.IntegerOutput reorderId annotation(Placement(transformation(origin={239,-47},extent={{-7,-7},{7,7}},rotation=0)));
-  AnomalyLibrary.Communication.FrameDuplicate duplicate(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,duplicateEveryN=3) annotation(Placement(transformation(origin={13,-145},extent={{-26,-26},{26,26}},rotation=0)));
-  Modelica.Blocks.Interfaces.IntegerOutput duplicateId annotation(Placement(transformation(origin={239,-145},extent={{-7,-7},{7,7}},rotation=0)));
+  AnomalyLibrary.Utilities.Internal.FrameSource transmitter(samplePeriod=0.1) "Common deterministic frame source" annotation(Placement(transformation(origin={-246,0},extent={{-28,-28},{28,28}},rotation=0)));
+  AnomalyLibrary.Communication.FrameDropout drop(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,dropEveryN=3) "Periodic frame-drop policy" annotation(Placement(transformation(origin={13,150},extent={{-26,-26},{26,26}},rotation=0)));
+  Modelica.Blocks.Interfaces.IntegerOutput dropId "Latest sequence identifier after dropping" annotation(Placement(transformation(origin={239,150},extent={{-7,-7},{7,7}},rotation=0)));
+  AnomalyLibrary.Communication.FrameDelay delay(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,delayTime=0.2) "Fixed frame-delay policy" annotation(Placement(transformation(origin={13,52},extent={{-26,-26},{26,26}},rotation=0)));
+  Modelica.Blocks.Interfaces.IntegerOutput delayId "Latest sequence identifier after delay" annotation(Placement(transformation(origin={239,52},extent={{-7,-7},{7,7}},rotation=0)));
+  AnomalyLibrary.Communication.FrameReorder reorder(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,pairTimeout=0.25) "Pairwise frame-reordering policy" annotation(Placement(transformation(origin={13,-47},extent={{-26,-26},{26,26}},rotation=0)));
+  Modelica.Blocks.Interfaces.IntegerOutput reorderId "Latest sequence identifier after reordering" annotation(Placement(transformation(origin={239,-47},extent={{-7,-7},{7,7}},rotation=0)));
+  AnomalyLibrary.Communication.FrameDuplicate duplicate(enabled=true,startTime=0,endTime=5,samplePeriod=0.1,maxFrames=16,duplicateEveryN=3) "Periodic frame-duplication policy" annotation(Placement(transformation(origin={13,-145},extent={{-26,-26},{26,26}},rotation=0)));
+  Modelica.Blocks.Interfaces.IntegerOutput duplicateId "Latest sequence identifier after duplication" annotation(Placement(transformation(origin={239,-145},extent={{-7,-7},{7,7}},rotation=0)));
 equation
   connect(transmitter.u,drop.u) annotation(Line(points={{-218,19.6},{-115.5,19.6},{-115.5,168.2},{-13,168.2}},color={0,0,127}));
   connect(transmitter.txCount,drop.txCount) annotation(Line(points={{-218,6.53332},{-213,6.53332},{-213,156.06666},{-13,156.06666}},color={255,127,0}));
@@ -37,5 +37,5 @@ equation
   connect(duplicate.receivedSequence,duplicateId) annotation(Line(points={{39,-133.41817},{239,-133.41817},{239,-145}},color={255,127,0}));
   annotation(experiment(StartTime=0,StopTime=4,Interval=0.008,Tolerance=1e-6),
     Diagram(coordinateSystem(extent={{-360,-240},{360,240}},preserveAspectRatio=true)),
-    Documentation(info="<html><p><b>Purpose</b> Compare four independent frame policies on a shared service grid</p><p><b>Interfaces</b> Instances and connections are shown in the Diagram layer.</p><p><b>Parameters</b> Default values are shown in the component modifiers.</p><p><b>Behavior</b> The transmitter emits sequence k and time 0.1 k. The drop branch removes each third frame. Delay, reorder and duplicate retain the source identity.</p><p><b>Initialization</b> All initial conditions are explicit in the source and component modifiers.</p><p><b>Activation and recovery</b> The given time windows follow the simulation time axis.</p><p><b>Limitations</b> This demonstration uses the declared inputs, initial conditions and idealized components.</p><p><b>Observables</b> Each rxCount, receivedSequence, receivedSourceTime, droppedCount and overflow.</p></html>"));
+    Documentation(info="<html><p>Feed identical frames from a 0.1 s source to four independent communication components. The policies drop every third frame, delay frames by 0.2 s, reorder adjacent pairs or duplicate every third frame. Each component has a 16-frame capacity and a 0.1 s service period.</p><p>Plot <code>dropId</code>, <code>delayId</code>, <code>reorderId</code> and <code>duplicateId</code> together with each component's <code>rxCount</code>, <code>queueLength</code> and qualification flags. Sequence values alone do not identify repeated deliveries. Duplication can build a backlog because the service rate remains one frame per tick.</p></html>"));
 end DeterministicCommunication;

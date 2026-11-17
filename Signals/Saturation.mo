@@ -1,23 +1,23 @@
 within AnomalyLibrary.Signals;
-block Saturation "Blend input toward a bounded saturation target"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
-  parameter Real lower=-1;
-  parameter Real upper=1;
-  Modelica.Blocks.Interfaces.RealInput u annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput y annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+block Saturation "Blend a real signal towards configured saturation limits"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
+  parameter Real lower=-1 "Lower saturation limit in the input signal unit";
+  parameter Real upper=1 "Upper saturation limit in the input signal unit";
+  Modelica.Blocks.Interfaces.RealInput u "Nominal input signal" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput y "Output signal after the selected modification" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(lower<=upper,"Reversed saturation limits.");
@@ -39,5 +39,5 @@ equation
         Text(extent={{-67,-74},{67,-49}}, textString="limit", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Blend input toward a bounded saturation target.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Blocks.Interfaces.RealInput u; Modelica.Blocks.Interfaces.RealOutput y</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Real lower=-1; parameter Real upper=1</p><p><b>Behavior</b> Blend input toward a bounded saturation target</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The optional trigger replaces the internal half-open window. A new activation updates the declared capture or command state.</p><p><b>Limitations</b> Input and output use the same units. The operation is deterministic.</p><p><b>Observables</b> active, effectLevel, activationCount, y</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.SignalDeviationAndRecovery\">AnomalyLibrary.Examples.SignalDeviationAndRecovery</a></p></html>"));
+    Documentation(info="<html><p>The saturation target is <code>min(upper,max(lower,u))</code>. The actual output interpolates between <code>u</code> and that target according to <code>effectLevel</code>. Intermediate severity or a transition can leave the output outside the target limits.</p><p>Set <code>enabled=true</code> to enable the effect. The internal activation window is <code>[startTime,endTime)</code>; <code>useExternalTrigger=true</code> selects <code>trigger</code> instead. The severity-scaled <code>effectLevel</code> rises and falls over <code>transitionTime</code>, so the output may recover after <code>active</code> becomes false.</p></html>"));
 end Saturation;

@@ -1,27 +1,27 @@
 within AnomalyLibrary.Electrical;
-model ChassisLeakage "Conduct leakage to a separately connected chassis"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model ChassisLeakage "Additional conductance to a chassis connection"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  Modelica.Electrical.Analog.Interfaces.PositivePin p annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Electrical.Analog.Interfaces.NegativePin chassis annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Electrical.Analog.Interfaces.PositivePin p "Positive electrical pin" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Electrical.Analog.Interfaces.NegativePin chassis "Electrical chassis connection" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
-  Modelica.Units.SI.Voltage v;
-  Modelica.Units.SI.Current i;
-  Modelica.Units.SI.Power lossPower;
-  parameter Modelica.Units.SI.Conductance G_fault(min=0)=0.01;
+  Modelica.Units.SI.Voltage v "Voltage from p to chassis";
+  Modelica.Units.SI.Current i "Current entering pin p";
+  Modelica.Units.SI.Power lossPower "Electrical power dissipated in the branch";
+  parameter Modelica.Units.SI.Conductance G_fault(min=0)=0.01 "Conductance at full effect";
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(G_fault>=0,"Negative leakage conductance.");
@@ -49,5 +49,5 @@ equation
         Line(points={{56,-37},{47,-53}}, color={128,128,128}, thickness=0.7, pattern=LinePattern.Solid),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Conduct leakage to a separately connected chassis.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Electrical.Analog.Interfaces.PositivePin p; Modelica.Electrical.Analog.Interfaces.NegativePin chassis</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Modelica.Units.SI.Conductance G_fault(min=0)=0.01</p><p><b>Behavior</b> Conduct leakage to a separately connected chassis</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Connect chassis to the actual host return. The component does not impose a ground reference.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.ElectricalDisturbances\">AnomalyLibrary.Examples.ElectricalDisturbances</a></p></html>"));
+    Documentation(info="<html><p>The leakage current is <code>G_fault*effectLevel*(p.v-chassis.v)</code>. The two pins carry equal and opposite currents. The component supplies no ground reference and has zero branch current at zero effect; connect <code>chassis</code> explicitly. Dissipation is available as <code>lossPower</code>.</p><p>Connect p to the affected node and chassis to the intended electrical return. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.ElectricalDisturbances\">ElectricalDisturbances</a> for connections.</p></html>"));
 end ChassisLeakage;

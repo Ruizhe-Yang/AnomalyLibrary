@@ -1,27 +1,27 @@
 within AnomalyLibrary.Signals;
-block RateLimit "Limit output slope after synchronizing to the current input"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+block RateLimit "Limit the output slope during activation"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
 
-  parameter Real riseRate(min=0)=1 "Input units per second";
-  parameter Real fallRate(min=0)=1 "Input units per second";
-  parameter Modelica.Units.SI.Time trackingTime(min=0)=0.01 "Small finite tracking time";
+  parameter Real riseRate(min=0)=1 "Maximum rising slope in input units per second";
+  parameter Real fallRate(min=0)=1 "Magnitude of the maximum falling slope in input units per second";
+  parameter Modelica.Units.SI.Time trackingTime(min=0)=0.01 "Positive time constant of the rate-limited tracking state";
 
-  Modelica.Blocks.Interfaces.RealInput u annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput y annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealInput u "Nominal input signal" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput y "Output signal after the selected modification" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  Real limited;
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  Real limited "Internal rate-limited tracking state";
 initial equation
   assert(riseRate>=0 and fallRate>=0 and trackingTime>0,"Invalid slope limiter settings.");
   assert(severity<=0 or severity>=1,"A discrete anomaly has deterministic severity zero or one.");
@@ -44,5 +44,5 @@ equation
         Text(extent={{-67,-74},{67,-49}}, textString="du/dt", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Limit output slope after synchronizing to the current input.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Blocks.Interfaces.RealInput u; Modelica.Blocks.Interfaces.RealOutput y</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; final parameter Modelica.Units.SI.Time transitionTime=0; parameter Real riseRate(min=0)=1 \"Input units per second\"; parameter Real fallRate(min=0)=1 \"Input units per second\"; parameter Modelica.Units.SI.Time trackingTime(min=0)=0.01 \"Small finite tracking time\"</p><p><b>Behavior</b> Limit output slope after synchronizing to the current input</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The optional trigger replaces the internal half-open window. A new activation updates the declared capture or command state.</p><p><b>Limitations</b> Input and output use the same units. The operation is deterministic.</p><p><b>Observables</b> active, effectLevel, activationCount, y</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.SignalDeviationAndRecovery\">AnomalyLibrary.Examples.SignalDeviationAndRecovery</a></p></html>"));
+    Documentation(info="<html><p>At initialisation and each activation onset, the internal state is synchronised to <code>u</code>. While active, its derivative is <code>(u-limited)/trackingTime</code> limited to <code>[-fallRate,riseRate]</code>. This is a rate-limited first-order tracking state.</p><p>Outside activation, <code>y=u</code> and the internal state is held. Deactivation therefore restores the current input immediately and can produce an output jump; the slope bounds apply only to the active state.</p><p>Set <code>enabled=true</code> and <code>severity=1</code> to apply the effect, or <code>severity=0</code> to disable it. The internal window is <code>[startTime,endTime)</code>; <code>useExternalTrigger=true</code> selects <code>trigger</code> instead. Intermediate severities are not supported.</p></html>"));
 end RateLimit;

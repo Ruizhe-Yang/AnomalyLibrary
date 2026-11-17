@@ -1,12 +1,4 @@
-AdvanceFIFO
-ContinuousAccumulator
-ContinuousEvidence
-csvQuote
-LogCompletion
-oneSidedDFT
-SampleAccumulator
-SampledEvidence
-SpectrumBuffer
-ToneSpectrum
-WindowEvidence
-WriteRows
+Activation
+EventActivation
+FrameQueue
+FrameSource

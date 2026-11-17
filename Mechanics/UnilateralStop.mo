@@ -1,32 +1,32 @@
 within AnomalyLibrary.Mechanics;
-model UnilateralStop "Finite one-sided stop"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model UnilateralStop "Compliant stop at a one-sided displacement limit"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  Modelica.Mechanics.Translational.Interfaces.Flange_a flange_a annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Mechanics.Translational.Interfaces.Flange_b flange_b annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Real displacement(unit="m");
-  Real relativeSpeed(unit="m/s");
-  Real effort(unit="N");
-  Modelica.Units.SI.Power lossPower;
+  Modelica.Mechanics.Translational.Interfaces.Flange_a flange_a "First translational flange" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Mechanics.Translational.Interfaces.Flange_b flange_b "Second translational flange" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Real displacement(unit="m") "Position of flange_b relative to flange_a";
+  Real relativeSpeed(unit="m/s") "Relative translational velocity";
+  Real effort(unit="N") "Force entering flange_b";
+  Modelica.Units.SI.Power lossPower "Power dissipated by damping";
 
-  parameter Modelica.Units.SI.Position gap(min=0)=0.01;
-  parameter Real k(min=0,unit="N/m")=1000;
-  parameter Real d(min=0,unit="N.s/m")=10;
-  parameter Modelica.Units.SI.Length smoothingLength(min=0)=0.001;
-  Real penetration(unit="m");
-  Real reaction(unit="N");
+  parameter Modelica.Units.SI.Position gap(min=0)=0.01 "Positive relative-displacement limit at which contact starts";
+  parameter Real k(min=0,unit="N/m")=1000 "Contact stiffness";
+  parameter Real d(min=0,unit="N.s/m")=10 "Viscous damping coefficient";
+  parameter Modelica.Units.SI.Length smoothingLength(min=0)=0.001 "Penetration scale used to regularise contact damping";
+  Real penetration(unit="m") "Nonnegative penetration beyond the contact boundary";
+  Real reaction(unit="N") "Nonnegative contact-force magnitude";
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(gap>=0 and k>=0 and d>=0 and smoothingLength>0,"Invalid contact coefficients.");
@@ -60,5 +60,5 @@ equation
         Text(extent={{-8,57},{28,80}}, textString="s", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Finite one-sided stop.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Mechanics.Translational.Interfaces.Flange_a flange_a; Modelica.Mechanics.Translational.Interfaces.Flange_b flange_b</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Modelica.Units.SI.Position gap(min=0)=0.01; parameter Real k(min=0,unit=\"N/m\")=1000; parameter Real d(min=0,unit=\"N.s/m\")=10; parameter Modelica.Units.SI.Length smoothingLength(min=0)=0.001</p><p><b>Behavior</b> Finite one-sided stop</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Compressive forces vanish continuously at the gap. High-impact contacts require a validated contact stiffness and timestep.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">AnomalyLibrary.Examples.MechanicalImpulseAndContact</a></p></html>"));
+    Documentation(info="<html><p>Contact occurs when <code>flange_b.s-flange_a.s</code> exceeds <code>gap</code>. Penetration produces an elastic reaction; damping acts only while penetration increases and is regularised by <code>smoothingLength</code>. The added force is zero at zero effect. This is a finite-stiffness contact, not an ideal position constraint.</p><p>Connect the two translational flanges and set the positive relative-displacement limit gap. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">MechanicalImpulseAndContact</a> for connections.</p></html>"));
 end UnilateralStop;

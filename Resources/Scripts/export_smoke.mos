@@ -1,6 +1,0 @@
-// Run from the release directory after loading the installed MSL 4.0.0.
-loadModel(Modelica,{"4.0.0"});
-loadFile("EvaluationLibrary/package.mo");
-checkModel(EvaluationLibrary.Examples.MultiSignalAssessment);
-simulate(EvaluationLibrary.Examples.MultiSignalAssessment,stopTime=2.2);
-getErrorString();

@@ -1,41 +1,41 @@
 within AnomalyLibrary.Communication;
-block FrameDuplicate "Send a deterministic duplicate with unchanged source identity"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={70,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={70,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+block FrameDuplicate "Duplicate selected frames while retaining their source identity"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={70,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={70,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
 
-  parameter Integer nPayload(min=1)=1;
-  parameter Integer maxFrames(min=1)=128;
-  parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.01;
-  parameter Integer duplicateEveryN(min=1)=2;
-  Modelica.Blocks.Interfaces.RealInput u[nPayload] annotation(Placement(transformation(origin={-100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,70},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerInput txCount annotation(Placement(transformation(origin={-100,23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,23.33333},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerInput sequence annotation(Placement(transformation(origin={-100,-23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,-23.33333},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealInput sourceTime(unit="s") annotation(Placement(transformation(origin={-100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,-70},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanInput validIn annotation(Placement(transformation(origin={-70,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={-70,100},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput y[nPayload] annotation(Placement(transformation(origin={100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,70},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput rxCount annotation(Placement(transformation(origin={100,57.27273},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,57.27273},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput receivedSequence annotation(Placement(transformation(origin={100,44.54545},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,44.54545},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput receivedSourceTime(unit="s") annotation(Placement(transformation(origin={100,31.81818},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,31.81818},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput available annotation(Placement(transformation(origin={100,19.09091},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,19.09091},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput validOut annotation(Placement(transformation(origin={100,6.36364},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,6.36364},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput droppedCount annotation(Placement(transformation(origin={100,-6.36364},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-6.36364},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput overflow annotation(Placement(transformation(origin={100,-19.09091},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-19.09091},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput queueLength annotation(Placement(transformation(origin={100,-31.81818},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-31.81818},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput inputSequenceError annotation(Placement(transformation(origin={100,-44.54545},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-44.54545},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput serviceDelay(unit="s") annotation(Placement(transformation(origin={100,-57.27273},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-57.27273},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput noCachedFrame annotation(Placement(transformation(origin={100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-70},extent={{-10,-10},{10,10}})));
+  parameter Integer nPayload(min=1)=1 "Number of real-valued payload channels";
+  parameter Integer maxFrames(min=1)=128 "Maximum number of frames held by the service queue";
+  parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.01 "Positive service interval";
+  parameter Integer duplicateEveryN(min=1)=2 "Duplicate frames whose transmission count is a multiple of this value";
+  Modelica.Blocks.Interfaces.RealInput u[nPayload] "Payload of the current candidate frame" annotation(Placement(transformation(origin={-100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,70},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerInput txCount "Transmission counter; advance by exactly one per candidate frame" annotation(Placement(transformation(origin={-100,23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,23.33333},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerInput sequence "Source identity carried by the candidate frame" annotation(Placement(transformation(origin={-100,-23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,-23.33333},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealInput sourceTime(unit="s") "Source timestamp carried by the candidate frame" annotation(Placement(transformation(origin={-100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,-70},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanInput validIn "Validity flag carried by the candidate frame" annotation(Placement(transformation(origin={-70,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={-70,100},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput y[nPayload] "Held payload of the most recently delivered frame" annotation(Placement(transformation(origin={100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,70},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput rxCount "Number of frames delivered to the output" annotation(Placement(transformation(origin={100,57.27273},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,57.27273},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput receivedSequence "Source identity of the most recently delivered frame" annotation(Placement(transformation(origin={100,44.54545},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,44.54545},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput receivedSourceTime(unit="s") "Source timestamp of the most recently delivered frame" annotation(Placement(transformation(origin={100,31.81818},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,31.81818},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput available "A received frame is present and not masked by an outage" annotation(Placement(transformation(origin={100,19.09091},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,19.09091},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput validOut "Received-frame validity qualified by output availability" annotation(Placement(transformation(origin={100,6.36364},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,6.36364},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput droppedCount "Number of discarded arrivals and queued frames" annotation(Placement(transformation(origin={100,-6.36364},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-6.36364},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput overflow "A queue-capacity overrun has occurred" annotation(Placement(transformation(origin={100,-19.09091},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-19.09091},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput queueLength "Number of queued frames, including a frame awaiting its partner" annotation(Placement(transformation(origin={100,-31.81818},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-31.81818},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput inputSequenceError "A transmission-counter change other than an increment of one occurred" annotation(Placement(transformation(origin={100,-44.54545},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-44.54545},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput serviceDelay(unit="s") "Delivery lateness beyond the scheduled due time" annotation(Placement(transformation(origin={100,-57.27273},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-57.27273},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput noCachedFrame "Replay is active without a cached valid inactive frame" annotation(Placement(transformation(origin={100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-70},extent={{-10,-10},{10,10}})));
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  AnomalyLibrary.Utilities.Internal.FrameQueue core(nPayload=nPayload,maxFrames=maxFrames,samplePeriod=samplePeriod,mode=AnomalyLibrary.Utilities.Types.FrameMode.Duplicate,duplicateEveryN=duplicateEveryN);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  AnomalyLibrary.Utilities.Internal.FrameQueue core(nPayload=nPayload,maxFrames=maxFrames,samplePeriod=samplePeriod,mode=AnomalyLibrary.Utilities.Types.FrameMode.Duplicate,duplicateEveryN=duplicateEveryN) "Finite frame queue and delivery policy";
 initial equation
 
   assert(severity<=0 or severity>=1,"A discrete anomaly has deterministic severity zero or one.");
@@ -79,5 +79,5 @@ equation
         Line(points={{-24,21},{-8,-28},{15,-28}}, color={0,0,127}, thickness=0.8, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Send a deterministic duplicate with unchanged source identity.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Blocks.Interfaces.RealInput u[nPayload]; Modelica.Blocks.Interfaces.IntegerInput txCount; Modelica.Blocks.Interfaces.IntegerInput sequence; Modelica.Blocks.Interfaces.RealInput sourceTime(unit=\"s\"); Modelica.Blocks.Interfaces.BooleanInput validIn; Modelica.Blocks.Interfaces.RealOutput y[nPayload]; Modelica.Blocks.Interfaces.IntegerOutput rxCount; Modelica.Blocks.Interfaces.IntegerOutput receivedSequence; Modelica.Blocks.Interfaces.RealOutput receivedSourceTime(unit=\"s\"); Modelica.Blocks.Interfaces.BooleanOutput available; Modelica.Blocks.Interfaces.BooleanOutput validOut; Modelica.Blocks.Interfaces.IntegerOutput droppedCount; Modelica.Blocks.Interfaces.BooleanOutput overflow; Modelica.Blocks.Interfaces.IntegerOutput queueLength; Modelica.Blocks.Interfaces.BooleanOutput inputSequenceError; Modelica.Blocks.Interfaces.RealOutput serviceDelay(unit=\"s\"); Modelica.Blocks.Interfaces.BooleanOutput noCachedFrame</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; final parameter Modelica.Units.SI.Time transitionTime=0; parameter Integer nPayload(min=1)=1; parameter Integer maxFrames(min=1)=128; parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.01; parameter Integer duplicateEveryN(min=1)=2</p><p><b>Behavior</b> Send a deterministic duplicate with unchanged source identity</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> Each increment of txCount admits one candidate frame. Active behavior uses a finite service queue. On exit active leftovers are discarded.</p><p><b>Limitations</b> An empty channel has available=false. Source identity and the independent receiving count have distinct meanings.</p><p><b>Observables</b> active, effectLevel, activationCount, y, rxCount, receivedSequence, receivedSourceTime, available, validOut, droppedCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.DeterministicCommunication\">AnomalyLibrary.Examples.DeterministicCommunication</a></p></html>"));
+    Documentation(info="<html><p>During activation, frames with <code>mod(txCount,duplicateEveryN)=0</code> are enqueued twice. Both deliveries retain the same payload, source identity, source timestamp and validity flag. Other frames are enqueued once. The two copies are accepted only when queue capacity can accommodate both.</p><p>Connect the payload <code>u</code>, transmission counter <code>txCount</code>, source identity <code>sequence</code>, <code>sourceTime</code> and <code>validIn</code>. Advance <code>txCount</code> by exactly one per candidate frame; other changes latch <code>inputSequenceError</code>. The most recent output is held, while <code>rxCount</code> identifies deliveries.</p><p>Inactive arrivals are delivered immediately. Active delivery uses a finite queue and emits at most one frame per <code>samplePeriod</code> service tick. Deactivation discards queued frames; <code>overflow</code> latches a capacity overrun. Configure binary severity and read <code>available</code> and <code>validOut</code> before interpreting held output.</p></html>"));
 end FrameDuplicate;

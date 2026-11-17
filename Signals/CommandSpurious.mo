@@ -1,28 +1,28 @@
 within AnomalyLibrary.Signals;
-block CommandSpurious "Schedule complete unintended pulses at configured times"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+block CommandSpurious "Add scheduled unintended Boolean pulses"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
 
-  parameter Integer nTimes(min=1)=1;
-  parameter Modelica.Units.SI.Time extraTimes[nTimes]={0.5*i for i in 1:nTimes};
-  parameter Modelica.Units.SI.Time pulseWidth(min=0)=0.25;
-  output Boolean effectActive;
+  parameter Integer nTimes(min=1)=1 "Number of configured switching or pulse instants";
+  parameter Modelica.Units.SI.Time extraTimes[nTimes]={0.5*i for i in 1:nTimes} "Absolute start times of the additional pulses";
+  parameter Modelica.Units.SI.Time pulseWidth(min=0)=0.25 "Duration of each accepted additional pulse";
+  output Boolean effectActive "An accepted command modification is currently in effect";
 
-  Modelica.Blocks.Interfaces.BooleanInput u annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput y annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanInput u "Nominal Boolean command" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput y "Resulting Boolean command" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  discrete Boolean accepted[nTimes](each start=false,each fixed=true);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  discrete Boolean accepted[nTimes](each start=false,each fixed=true) "Whether each scheduled pulse was accepted";
 initial equation
   assert(pulseWidth>0 and nTimes>=1,"Invalid spurious pulse settings.");
   for i in 2:nTimes loop assert(extraTimes[i]>extraTimes[i-1],"Pulse times must increase."); end for;
@@ -51,5 +51,5 @@ equation
         Text(extent={{-48,-46},{48,-71}}, textString="extra", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Schedule complete unintended pulses at configured times.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; output Boolean effectActive; Modelica.Blocks.Interfaces.BooleanInput u; Modelica.Blocks.Interfaces.BooleanOutput y</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; final parameter Modelica.Units.SI.Time transitionTime=0; parameter Integer nTimes(min=1)=1; parameter Modelica.Units.SI.Time extraTimes[nTimes]={0.5*i for i in 1:nTimes}; parameter Modelica.Units.SI.Time pulseWidth(min=0)=0.25</p><p><b>Behavior</b> Schedule complete unintended pulses at configured times</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The optional trigger replaces the internal half-open window. A new activation updates the declared capture or command state.</p><p><b>Limitations</b> Input and output use the same units. The operation is deterministic.</p><p><b>Observables</b> active, effectLevel, activationCount, effectActive, y</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.UnsafeCommandPatterns\">AnomalyLibrary.Examples.UnsafeCommandPatterns</a></p></html>"));
+    Documentation(info="<html><p>Each absolute time in <code>extraTimes</code> starts a pulse of width <code>pulseWidth</code> if the anomaly is active at that scheduled instant. At initialisation, a scheduled pulse is accepted only if its interval currently contains the simulation time. The output is the logical OR of <code>u</code> and the accepted pulses.</p><p>Accepted pulses run to their scheduled ends after deactivation, and overlaps merge through the OR operation. Configure increasing <code>extraTimes</code> within an active window; the default first pulse time precedes the default activation window.</p><p>Set <code>enabled=true</code> and <code>severity=1</code> to apply the effect, or <code>severity=0</code> to disable it. The internal window is <code>[startTime,endTime)</code>; <code>useExternalTrigger=true</code> selects <code>trigger</code> instead. Intermediate severities are not supported.</p></html>"));
 end CommandSpurious;

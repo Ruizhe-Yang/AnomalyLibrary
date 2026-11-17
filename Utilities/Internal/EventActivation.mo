@@ -1,9 +1,9 @@
 within AnomalyLibrary.Utilities.Internal;
-block EventActivation "半开事件窗的布尔激活"
-  parameter Boolean enabled = true;
-  parameter Modelica.Units.SI.Time eventStartTime = 2;
-  parameter Modelica.Units.SI.Time eventEndTime = 4;
-  output Boolean active;
+block EventActivation "Activate within a half-open event interval"
+  parameter Boolean enabled = true "Enable the event interval";
+  parameter Modelica.Units.SI.Time eventStartTime = 2 "Inclusive event start";
+  parameter Modelica.Units.SI.Time eventEndTime = 4 "Exclusive event end";
+  output Boolean active "True within the enabled event interval";
 initial equation
   assert(eventStartTime < eventEndTime, "Event start must precede event end.");
 equation
@@ -20,20 +20,5 @@ equation
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
     Diagram(coordinateSystem(extent={{-100,-100},{100,100}})),
-    Documentation(info="<html>
-<p>半开事件窗的布尔激活</p>
-<p><b>行为</b> 半开事件窗的布尔激活。</p>
-<p><b>最小用法</b> 由本库组件按源码中的参数和接口装配。</p>
-<p><b>适用边界</b> 实现细节随本库版本演进。</p>
-<p>参数的类型、默认值和取值见下列声明。</p>
-<ul>
-<li><code>Boolean enabled = true</code></li>
-<li><code>Modelica.Units.SI.Time eventStartTime = 2</code></li>
-<li><code>Modelica.Units.SI.Time eventEndTime = 4</code></li>
-</ul>
-<p>接口及方向</p>
-<ul>
-<li><code>output Boolean active</code></li>
-</ul>
-</html>"));
+    Documentation(info="<html><p>Set <code>active</code> when <code>enabled</code> is true and <code>eventStartTime &lt;= time &lt; eventEndTime</code>. The start must precede the end.</p><p>This Boolean gate has no transition ramp, external trigger or permanent latch.</p></html>"));
 end EventActivation;

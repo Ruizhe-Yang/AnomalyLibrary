@@ -1,28 +1,28 @@
 within AnomalyLibrary.Signals;
-block CommandTiming "Apply a nonnegative online delay or a signed shift to a known plan"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+block CommandTiming "Delay an online command or shift a declared switching plan"
+parameter Boolean enabled=false "Enable the anomaly";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the internal activation window";
+  parameter Real severity(min=0,max=1)=1 "Requested severity between zero and one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the internal activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the internal activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full rise or fall in the activation level";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Anomaly activation is currently requested";
+  output Real effectLevel "Severity-scaled activation and recovery level";
+  output Integer activationCount "Number of activation onsets";
 
-  parameter Boolean useTimeTable=false;
-  parameter Modelica.Units.SI.Time delayTime(min=0)=0.2;
-  parameter Modelica.Units.SI.Time signedShift=0;
-  parameter Integer nTimes(min=1)=2;
-  parameter Modelica.Units.SI.Time timeTable[nTimes]={i for i in 1:nTimes};
+  parameter Boolean useTimeTable=false "Generate an active switching plan instead of delaying u";
+  parameter Modelica.Units.SI.Time delayTime(min=0)=0.2 "Non-negative delay applied while active";
+  parameter Modelica.Units.SI.Time signedShift=0 "Signed time shift applied to the known switching plan";
+  parameter Integer nTimes(min=1)=2 "Number of configured switching or pulse instants";
+  parameter Modelica.Units.SI.Time timeTable[nTimes]={i for i in 1:nTimes} "Increasing absolute switching times of the known plan";
 
-  Modelica.Blocks.Interfaces.BooleanInput u annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput y annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanInput u "Nominal Boolean command" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput y "Resulting Boolean command" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(delayTime>=0,"Online delay cannot be negative.");
@@ -46,5 +46,5 @@ equation
         Text(extent={{-51,-46},{51,-72}}, textString="dt", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Apply a nonnegative online delay or a signed shift to a known plan.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Blocks.Interfaces.BooleanInput u; Modelica.Blocks.Interfaces.BooleanOutput y</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; final parameter Modelica.Units.SI.Time transitionTime=0; parameter Boolean useTimeTable=false; parameter Modelica.Units.SI.Time delayTime(min=0)=0.2; parameter Modelica.Units.SI.Time signedShift=0; parameter Integer nTimes(min=1)=2; parameter Modelica.Units.SI.Time timeTable[nTimes]={i for i in 1:nTimes}</p><p><b>Behavior</b> Apply a nonnegative online delay or a signed shift to a known plan</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The optional trigger replaces the internal half-open window. A new activation updates the declared capture or command state.</p><p><b>Limitations</b> Input and output use the same units. The operation is deterministic.</p><p><b>Observables</b> active, effectLevel, activationCount, y</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.UnsafeCommandPatterns\">AnomalyLibrary.Examples.UnsafeCommandPatterns</a></p></html>"));
+    Documentation(info="<html><p>With <code>useTimeTable=false</code>, activation selects the input history delayed by the non-negative <code>delayTime</code>. With <code>useTimeTable=true</code>, the output alternates false/true at the absolute instants <code>timeTable + signedShift</code>; <code>u</code> is not used to generate that active plan.</p><p>A negative <code>signedShift</code> advances a known plan, not an unknown live input. Outside activation, <code>y</code> follows the current <code>u</code>, so changing modes may cause an immediate Boolean transition.</p><p>Set <code>enabled=true</code> and <code>severity=1</code> to apply the effect, or <code>severity=0</code> to disable it. The internal window is <code>[startTime,endTime)</code>; <code>useExternalTrigger=true</code> selects <code>trigger</code> instead. Intermediate severities are not supported.</p></html>"));
 end CommandTiming;

@@ -1,25 +1,25 @@
 within AnomalyLibrary.Thermal;
-model AmbientShift "Shift an environmental temperature across a finite thermal conductance"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model AmbientShift "Environment temperature shift through a finite conductance"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Modelica.Units.SI.Temperature referenceTemperature(min=0)=293.15;
-  parameter Modelica.Units.SI.TemperatureDifference deltaT=10;
-  parameter Modelica.Units.SI.ThermalConductance G(min=0)=2;
-  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.Temperature environment;
-  Modelica.Units.SI.HeatFlowRate heatFlow;
+  parameter Modelica.Units.SI.Temperature referenceTemperature(min=0)=293.15 "Nominal absolute environment temperature";
+  parameter Modelica.Units.SI.TemperatureDifference deltaT=10 "Environment temperature change at full effect";
+  parameter Modelica.Units.SI.ThermalConductance G(min=0)=2 "Conductance between the environment and the body";
+  Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port "Thermal connection to the affected body" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.Temperature environment "Current absolute environment temperature";
+  Modelica.Units.SI.HeatFlowRate heatFlow "Heat flow supplied to the connected system";
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(G>=0 and referenceTemperature>0 and referenceTemperature+min(0,deltaT)>0,"Invalid temperature boundary.");
@@ -45,5 +45,5 @@ equation
         Line(points={{-25,48},{15,48},{15,68},{42,68}}, color={64,64,64}, thickness=0.8, pattern=LinePattern.Solid),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Shift an environmental temperature across a finite thermal conductance.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Thermal.HeatTransfer.Interfaces.HeatPort_b port</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Modelica.Units.SI.Temperature referenceTemperature(min=0)=293.15; parameter Modelica.Units.SI.TemperatureDifference deltaT=10; parameter Modelica.Units.SI.ThermalConductance G(min=0)=2</p><p><b>Behavior</b> Shift an environmental temperature across a finite thermal conductance</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. The inactive reference is the original finite boundary conductance at referenceTemperature.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">AnomalyLibrary.Examples.ThermalPulseAndEnvironment</a></p></html>"));
+    Documentation(info="<html><p>The environmental temperature is <code>referenceTemperature+deltaT*effectLevel</code>. Heat enters the connected body at <code>G*(environment-port.T)</code>. At zero effect the nominal conductance to <code>referenceTemperature</code> remains present, so this model is part of the nominal thermal boundary. The declared temperatures must remain positive in kelvin.</p><p>Connect port to the body and configure the nominal environment temperature, deltaT and G. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.ThermalPulseAndEnvironment\">ThermalPulseAndEnvironment</a> for connections.</p></html>"));
 end AmbientShift;

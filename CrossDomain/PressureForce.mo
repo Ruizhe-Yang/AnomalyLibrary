@@ -1,28 +1,28 @@
 within AnomalyLibrary.CrossDomain;
-model PressureForce "Convert a prescribed pressure difference into an external force"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model PressureForce "External force from a prescribed pressure difference"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Boolean useSupport=false;
-  Modelica.Mechanics.Translational.Interfaces.Flange_b flange annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Mechanics.Translational.Interfaces.Support support if useSupport annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.Force applied;
-  Modelica.Units.SI.Power externalPower;
-  parameter Modelica.Units.SI.Area A(min=0)=1e-4;
-  Modelica.Blocks.Interfaces.RealInput dp(unit="Pa") annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
+  parameter Boolean useSupport=false "Expose the reaction support";
+  Modelica.Mechanics.Translational.Interfaces.Flange_b flange "Driven translational flange" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Mechanics.Translational.Interfaces.Support support if useSupport "Reaction support; a fixed reference is used when omitted" annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.Force applied "Force applied to the connected body";
+  Modelica.Units.SI.Power externalPower "Signed power supplied to the connected system";
+  parameter Modelica.Units.SI.Area A(min=0)=1e-4 "Effective area loaded by the prescribed pressure difference";
+  Modelica.Blocks.Interfaces.RealInput dp(unit="Pa") "Prescribed pressure difference acting on area A" annotation(Placement(transformation(origin={-100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={-100,0},extent={{-10,-10},{10,10}})));
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  Modelica.Units.SI.Position reference;
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  Modelica.Units.SI.Position reference "Support position or fixed-world reference";
 
 initial equation
   assert(A>=0,"Negative piston area.");
@@ -54,5 +54,5 @@ equation
         Text(extent={{-67,-49},{-30,-73}}, textString="A", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Convert a prescribed pressure difference into an external force.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Mechanics.Translational.Interfaces.Flange_b flange; Modelica.Blocks.Interfaces.RealInput dp(unit=\"Pa\")</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; parameter Boolean useSupport=false; parameter Modelica.Units.SI.Area A(min=0)=1e-4</p><p><b>Behavior</b> Convert a prescribed pressure difference into an external force</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Positive effort acts in the positive flange coordinate. Support carries the equal reaction or a fixed world reference. Pressure is an information input. No fluid volume or hydraulic power transformation is modeled.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.CrossDomainEffects\">AnomalyLibrary.Examples.CrossDomainEffects</a></p></html>"));
+    Documentation(info="<html><p>The force applied along the positive flange coordinate is <code>A*dp*effectLevel</code>. An exposed support carries the equal reaction; otherwise a fixed reference is used. Pressure is an input signal: this model contains no fluid volume or fluid-side energy balance. <code>externalPower</code> reports the signed mechanical power supplied by the prescribed load.</p><p>Supply dp, set the effective area A and connect the translational flange and optional support. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.CrossDomainEffects\">CrossDomainEffects</a> for connections.</p></html>"));
 end PressureForce;

@@ -1,5 +1,5 @@
 within AnomalyLibrary;
-package Fluid "Fluid"
+package Fluid "Additional fluid paths and prescribed mass exchange"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
@@ -10,4 +10,5 @@ package Fluid "Fluid"
         Line(points={{19.32,-19.964},{42.504,-19.964},{42.504,0}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Dash),
         Rectangle(extent={{-19.32,-28.336},{19.32,-11.592}}, lineColor={128,128,128}, fillColor={255,255,255}, fillPattern=FillPattern.None, pattern=LinePattern.Solid, lineThickness=0.5, radius=0)
       }));
+  annotation(Documentation(info="<html><p>Linear series resistance, bypass and environmental flow paths, and prescribed mass injection or withdrawal. Redeclare the replaceable Medium consistently across connected ports. Flow-path models transfer stream quantities without storage; environmental pressures and fluid states must be supplied by connected components.</p></html>"));
 end Fluid;

@@ -1,5 +1,5 @@
 within AnomalyLibrary;
-package Mechanics "Mechanics"
+package Mechanics "Mechanical loads and compliant connections"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
@@ -13,4 +13,5 @@ package Mechanics "Mechanics"
         Text(extent={{-23.184,36.708},{23.184,52.164}}, textString="k,d", textColor={64,64,64}, fontSize=0),
         Line(points={{27.692,48.3},{27.692,31.556}}, color={128,128,128}, thickness=0.8, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled})
       }));
+  annotation(Documentation(info="<html><p>Prescribed forces and torques, finite impulses, viscous couplings and compliant contacts. Connect loads to driven flanges and expose their support when the reaction is part of the model. Coupling and contact models use two flanges; their inactive relations are described individually.</p></html>"));
 end Mechanics;

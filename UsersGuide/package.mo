@@ -1,14 +1,12 @@
-within EvaluationLibrary;
-package UsersGuide "User guide"
+within AnomalyLibrary;
+package UsersGuide "User's guide"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
-        Polygon(points={{-58.88,-44.16},{-58.88,43.24},{-7.36,33.12},{0,26.68},{7.36,33.12},{58.88,43.24},{58.88,-44.16},{7.36,-34.04},{0,-40.48},{-7.36,-34.04},{-58.88,-44.16}}, lineColor={128,128,128}, fillColor={255,255,255}, fillPattern=FillPattern.Solid, pattern=LinePattern.Solid, lineThickness=0.5),
-        Line(points={{0,-40.48},{0,26.68}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Solid),
-        Line(points={{-46.92,22.08},{-15.64,15.64}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Solid),
-        Line(points={{-46.92,4.6},{-15.64,-1.84}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Solid),
-        Line(points={{15.64,15.64},{46.92,22.08}}, color={75,138,73}, thickness=0.8, pattern=LinePattern.Solid),
-        Line(points={{15.64,-1.84},{46.92,4.6}}, color={75,138,73}, thickness=0.8, pattern=LinePattern.Solid)
+        Polygon(points={{-53.36,39.56},{-5.52,30.36},{0,21.16},{5.52,30.36},{53.36,39.56},{53.36,-39.56},{5.52,-48.76},{0,-39.56},{-5.52,-48.76},{-53.36,-39.56},{-53.36,39.56}}, lineColor={64,64,64}, fillColor={255,255,255}, fillPattern=FillPattern.Solid, pattern=LinePattern.Solid, lineThickness=0.5),
+        Line(points={{0,21.16},{0,-39.56}}, color={75,138,73}, thickness=0.8, pattern=LinePattern.Solid),
+        Line(points={{-39.56,11.04},{-15.64,6.44}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Solid),
+        Line(points={{15.64,6.44},{39.56,11.04}}, color={128,128,128}, thickness=0.6, pattern=LinePattern.Solid)
       }));
-  annotation(Documentation(info="<html><p>Start with <a href=\"modelica://EvaluationLibrary.UsersGuide.GettingStarted\">GettingStarted</a> to load the library and run an example. <a href=\"modelica://EvaluationLibrary.UsersGuide.Overview\">Overview</a> describes the available model groups; <a href=\"modelica://EvaluationLibrary.UsersGuide.Conventions\">Conventions</a> and <a href=\"modelica://EvaluationLibrary.UsersGuide.Limitations\">Limitations</a> explain result interpretation.</p><p>The accompanying <code>docs/LearningGuide.html</code> provides an offline tutorial in English with a Chinese language option.</p></html>"));
+  annotation(Documentation(info="<html><p>Read <a href=\"modelica://AnomalyLibrary.UsersGuide.GettingStarted\">GettingStarted</a> for the first example, <a href=\"modelica://AnomalyLibrary.UsersGuide.Overview\">Overview</a> for the package groups, and <a href=\"modelica://AnomalyLibrary.UsersGuide.Conventions\">Conventions</a> and <a href=\"modelica://AnomalyLibrary.UsersGuide.Limitations\">Limitations</a> for interpretation and scope.</p><p>The complete manuals are <code>docs/UserGuide.md</code> in English and <code>docs/UserGuide.zh-CN.md</code> in Chinese.</p></html>"));
 end UsersGuide;

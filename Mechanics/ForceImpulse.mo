@@ -1,31 +1,31 @@
 within AnomalyLibrary.Mechanics;
-model ForceImpulse "Deliver a finite rectangular force impulse"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  final parameter Modelica.Units.SI.Time endTime=startTime+duration;
-  final parameter Modelica.Units.SI.Time transitionTime=0;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model ForceImpulse "Rectangular force pulse with a specified impulse"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Discrete activation selector, restricted to zero or one";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  final parameter Modelica.Units.SI.Time endTime=startTime+duration "Exclusive end of the scheduled activation window";
+  final parameter Modelica.Units.SI.Time transitionTime=0 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
 
-  parameter Boolean useSupport=false;
-  Modelica.Mechanics.Translational.Interfaces.Flange_b flange annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Mechanics.Translational.Interfaces.Support support if useSupport annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.Force applied;
-  Modelica.Units.SI.Power externalPower;
-  parameter Real impulse(unit="N.s")=1;
-  parameter Modelica.Units.SI.Time duration(min=0)=0.1;
+  parameter Boolean useSupport=false "Expose the reaction support";
+  Modelica.Mechanics.Translational.Interfaces.Flange_b flange "Driven translational flange" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Mechanics.Translational.Interfaces.Support support if useSupport "Reaction support; a fixed reference is used when omitted" annotation(Placement(transformation(origin={0,-100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,-100},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.Force applied "Force applied to the connected body";
+  Modelica.Units.SI.Power externalPower "Signed power supplied to the connected system";
+  parameter Real impulse(unit="N.s")=1 "Specified force impulse";
+  parameter Modelica.Units.SI.Time duration(min=0)=0.1 "Duration of each rectangular pulse";
 
 
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
-  Modelica.Units.SI.Position reference;
-  discrete Modelica.Units.SI.Time began(start=0,fixed=true);
-  discrete Boolean seen(start=false,fixed=true);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
+  Modelica.Units.SI.Position reference "Support position or fixed-world reference";
+  discrete Modelica.Units.SI.Time began(start=0,fixed=true) "Start time of the most recent pulse";
+  discrete Boolean seen(start=false,fixed=true) "An activation has started a pulse";
 initial equation
   assert(duration>0,"Force impulse needs a positive duration.");
   assert(severity<=0 or severity>=1,"A discrete anomaly has deterministic severity zero or one.");
@@ -55,5 +55,5 @@ equation
         Line(points={{-52,51},{-28,51},{-28,75},{11,75},{11,51},{44,51}}, color={191,0,0}, thickness=1, pattern=LinePattern.Solid),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Deliver a finite rectangular force impulse.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Mechanics.Translational.Interfaces.Flange_b flange</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; final parameter Modelica.Units.SI.Time endTime=startTime+duration; final parameter Modelica.Units.SI.Time transitionTime=0; parameter Boolean useSupport=false; parameter Real impulse(unit=\"N.s\")=1; parameter Modelica.Units.SI.Time duration(min=0)=0.1</p><p><b>Behavior</b> Deliver a finite rectangular force impulse</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Positive effort acts in the positive flange coordinate. Support carries the equal reaction or a fixed world reference. </p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">AnomalyLibrary.Examples.MechanicalImpulseAndContact</a></p></html>"));
+    Documentation(info="<html><p>Each activation starts a pulse of magnitude <code>impulse/duration</code> in the positive flange direction. The pulse lasts <code>duration</code>, even if an external trigger ends earlier; another activation restarts the timer. <code>severity</code> is restricted to zero or one. The optional support carries the equal reaction; an omitted support uses a fixed reference. <code>externalPower</code> reports the supplied mechanical power.</p><p>Connect flange to the driven body, set impulse and duration, and expose support when needed. Set enabled=true and choose startTime or an external trigger.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.MechanicalImpulseAndContact\">MechanicalImpulseAndContact</a> for connections.</p></html>"));
 end ForceImpulse;

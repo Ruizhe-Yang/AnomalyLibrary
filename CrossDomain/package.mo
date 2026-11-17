@@ -1,5 +1,5 @@
 within AnomalyLibrary;
-package CrossDomain "CrossDomain"
+package CrossDomain "Coupled disturbances across physical domains"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
@@ -11,4 +11,5 @@ package CrossDomain "CrossDomain"
         Line(points={{9.936,-12.2544},{9.936,-32.1264}}, color={191,0,0}, thickness=1, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
         Line(points={{0,-34.776},{0,-57.96}}, color={191,0,0}, thickness=1, pattern=LinePattern.Solid)
       }));
+  annotation(Documentation(info="<html><p>Electrical-to-thermal dissipation, prescribed pressure-to-force conversion and shock-dependent measurement bias. Each model states whether the coupling conserves exchanged power or uses a prescribed external signal. Connect all exposed physical ports and supply signals in consistent units.</p></html>"));
 end CrossDomain;

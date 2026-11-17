@@ -1,5 +1,5 @@
 within AnomalyLibrary;
-package Thermal "Thermal"
+package Thermal "Thermal sources and additional heat-transfer paths"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
@@ -10,4 +10,5 @@ package Thermal "Thermal"
         Line(points={{-3.312,-17.8848},{3.312,17.8848}}, color={191,0,0}, thickness=1, pattern=LinePattern.Solid),
         Text(extent={{-24.5088,29.1456},{24.5088,46.368}}, textString="G+", textColor={191,0,0}, fontSize=0)
       }));
+  annotation(Documentation(info="<html><p>Prescribed heat flow, finite thermal pulses, added conductance and environmental heat exchange. Positive supplied heat flow heats the connected body. Models use Modelica Standard Library heat ports and do not add thermal storage unless explicitly stated.</p></html>"));
 end Thermal;

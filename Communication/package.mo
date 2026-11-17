@@ -1,5 +1,5 @@
 within AnomalyLibrary;
-package Communication "Communication"
+package Communication "Deterministic frame and sampling anomalies"
   extends Modelica.Icons.Package;
   annotation(Icon(coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
       graphics={
@@ -15,4 +15,5 @@ package Communication "Communication"
         Line(points={{-23.92,26.68},{13.8,26.68}}, color={0,0,127}, thickness=0.8, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled}),
         Line(points={{-22.08,19.32},{-7.36,-25.76},{13.8,-25.76}}, color={0,0,127}, thickness=0.8, pattern=LinePattern.Solid, arrow={Arrow.None,Arrow.Filled})
       }));
+  annotation(Documentation(info="<html><p>Frame blocks model deterministic delay, loss, duplication, reordering, replay, interruption, payload changes and timestamp offsets. They receive payload, a transmission count, source identity, source timestamp and validity as separate inputs. <code>rxCount</code> counts deliveries independently of the transmitted source identity.</p><p>Advance <code>txCount</code> by exactly one per frame. Inactive arrivals are delivered immediately; active queue-based modes service at most one frame per tick and use finite capacity. Held output is qualified by <code>available</code> and <code>validOut</code>; these flags do not establish freshness.</p><p><code>SampleClockOffset</code> selects between two sampling grids and uses a different interface. See <a href=\"modelica://AnomalyLibrary.Examples.DeterministicCommunication\">DeterministicCommunication</a> for complete source and receiver bindings.</p></html>"));
 end Communication;

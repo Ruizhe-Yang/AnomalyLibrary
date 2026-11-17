@@ -1,26 +1,26 @@
 within AnomalyLibrary.Fluid;
-model MassInjection "Inject a declared fluid state or withdraw the host stream"
-parameter Boolean enabled=false;
-  parameter Boolean useExternalTrigger=false;
-  parameter Real severity(min=0,max=1)=1;
-  parameter Modelica.Units.SI.Time startTime=1;
-  parameter Modelica.Units.SI.Time endTime=2;
-  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05;
-  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
-  output Boolean active;
-  output Real effectLevel;
-  output Integer activationCount;
+model MassInjection "Prescribed fluid injection or withdrawal"
+parameter Boolean enabled=false "Enable the configured disturbance";
+  parameter Boolean useExternalTrigger=false "Use trigger instead of the scheduled time window";
+  parameter Real severity(min=0,max=1)=1 "Multiplier applied to the activation envelope";
+  parameter Modelica.Units.SI.Time startTime=1 "Inclusive start of the scheduled activation window";
+  parameter Modelica.Units.SI.Time endTime=2 "Exclusive end of the scheduled activation window";
+  parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05 "Duration of a full-scale activation or recovery ramp";
+  Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger "External activation request" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+  output Boolean active "Activation request state";
+  output Real effectLevel "Severity scaled activation envelope";
+  output Integer activationCount "Number of activation starts";
   replaceable package Medium=Modelica.Media.Water.ConstantPropertyLiquidWater constrainedby Modelica.Media.Interfaces.PartialMedium;
-  parameter Modelica.Units.SI.MassFlowRate injection=0.1;
-  parameter Modelica.Units.SI.AbsolutePressure injectionPressure(min=0)=101325;
-  parameter Modelica.Units.SI.Temperature injectionTemperature(min=0)=293.15;
-  parameter Medium.MassFraction X[Medium.nX]=Medium.X_default;
-  Modelica.Fluid.Interfaces.FluidPort_b port(redeclare package Medium=Medium) annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
-  Modelica.Units.SI.MassFlowRate massAdded;
-  Modelica.Units.SI.Power enthalpyAdded;
+  parameter Modelica.Units.SI.MassFlowRate injection=0.1 "Mass flow supplied to the connected system at full effect";
+  parameter Modelica.Units.SI.AbsolutePressure injectionPressure(min=0)=101325 "Pressure used to define the injected thermodynamic state";
+  parameter Modelica.Units.SI.Temperature injectionTemperature(min=0)=293.15 "Temperature of the injected fluid";
+  parameter Medium.MassFraction X[Medium.nX]=Medium.X_default "Mass fractions of the injected fluid";
+  Modelica.Fluid.Interfaces.FluidPort_b port(redeclare package Medium=Medium) "Connection to the affected fluid network" annotation(Placement(transformation(origin={100,0},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,0},extent={{-10,-10},{10,10}})));
+  Modelica.Units.SI.MassFlowRate massAdded "Signed mass flow supplied to the connected system";
+  Modelica.Units.SI.Power enthalpyAdded "Signed enthalpy flow supplied to the connected system";
 protected
   AnomalyLibrary.Utilities.Internal.Activation gate(enabled=enabled,permanent=false,severity=severity,startTime=startTime,endTime=endTime,
-    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger);
+    transitionTime=transitionTime,useExternalTrigger=useExternalTrigger) "Activation and recovery envelope";
 
 initial equation
   assert(injectionPressure>0 and injectionTemperature>0,"Invalid injection state.");
@@ -45,5 +45,5 @@ equation
         Text(extent={{-30,21},{30,43}}, textString="m", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Inject a declared fluid state or withdraw the host stream.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.BooleanInput trigger if useExternalTrigger; output Boolean active; output Real effectLevel; output Integer activationCount; Modelica.Fluid.Interfaces.FluidPort_b port(redeclare package Medium=Medium)</p><p><b>Parameters</b> parameter Boolean enabled=false; parameter Boolean useExternalTrigger=false; parameter Real severity(min=0,max=1)=1; parameter Modelica.Units.SI.Time startTime=1; parameter Modelica.Units.SI.Time endTime=2; parameter Modelica.Units.SI.Time transitionTime(min=0)=0.05; replaceable package Medium=Modelica.Media.Water.ConstantPropertyLiquidWater constrainedby Modelica.Media.Interfaces.PartialMedium; parameter Modelica.Units.SI.MassFlowRate injection=0.1; parameter Modelica.Units.SI.AbsolutePressure injectionPressure(min=0)=101325; parameter Modelica.Units.SI.Temperature injectionTemperature(min=0)=293.15; parameter Medium.MassFraction X[Medium.nX]=Medium.X_default</p><p><b>Behavior</b> Inject a declared fluid state or withdraw the host stream</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> The configured gate follows the half-open time window or an external trigger. A disabled intervention leaves its documented reference relation.</p><p><b>Limitations</b> Zero-effect class: Exact. Positive flow adds the declared state. Negative flow withdraws the receiving network stream. Use a Medium that supports the declared state.</p><p><b>Observables</b> active, effectLevel, activationCount</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.FluidPathDisturbances\">AnomalyLibrary.Examples.FluidPathDisturbances</a></p></html>"));
+    Documentation(info="<html><p>Positive <code>injection*effectLevel</code> adds mass with the declared pressure, temperature and mass fractions; negative flow withdraws the connected stream. <code>injectionPressure</code> defines the supplied enthalpy and does not impose the port pressure. Injected trace-substance concentrations are zero. <code>massAdded</code> and <code>enthalpyAdded</code> report signed mass and enthalpy flow rates.</p><p>Connect port to the fluid network, match Medium and specify injection and the injected state. Set <code>enabled=true</code> and configure the scheduled window or external trigger. <code>effectLevel</code> scales the disturbance and can remain nonzero during recovery after <code>active</code> becomes false.</p><p>See <a href=\"modelica://AnomalyLibrary.Examples.FluidPathDisturbances\">FluidPathDisturbances</a> for connections.</p></html>"));
 end MassInjection;

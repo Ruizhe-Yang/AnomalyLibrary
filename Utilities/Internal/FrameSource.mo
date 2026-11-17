@@ -1,11 +1,11 @@
 within AnomalyLibrary.Utilities.Internal;
-block FrameSource "Clocked one-field frame source for the communication example"
-parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.1;
-    Modelica.Blocks.Interfaces.RealOutput u[1] annotation(Placement(transformation(origin={100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,70},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput txCount(start=0,fixed=true) annotation(Placement(transformation(origin={100,23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,23.33333},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.IntegerOutput sequence annotation(Placement(transformation(origin={100,-23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-23.33333},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.RealOutput sourceTime(unit="s",start=0,fixed=true) annotation(Placement(transformation(origin={100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-70},extent={{-10,-10},{10,10}})));
-  Modelica.Blocks.Interfaces.BooleanOutput validIn annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
+block FrameSource "Generate one-field frames on a uniform sample clock"
+parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.1 "Positive interval between transmitted frames";
+    Modelica.Blocks.Interfaces.RealOutput u[1] "One-field payload equal to the transmission count" annotation(Placement(transformation(origin={100,70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,70},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput txCount(start=0,fixed=true) "Number of transmitted frames" annotation(Placement(transformation(origin={100,23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,23.33333},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.IntegerOutput sequence "Sequence identifier of the latest frame" annotation(Placement(transformation(origin={100,-23.33333},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-23.33333},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.RealOutput sourceTime(unit="s",start=0,fixed=true) "Timestamp of the latest transmitted frame" annotation(Placement(transformation(origin={100,-70},extent={{-10,-10},{10,10}}),iconTransformation(origin={100,-70},extent={{-10,-10},{10,10}})));
+  Modelica.Blocks.Interfaces.BooleanOutput validIn "True after the first frame has been transmitted" annotation(Placement(transformation(origin={0,100},extent={{-10,-10},{10,10}}),iconTransformation(origin={0,100},extent={{-10,-10},{10,10}})));
 equation
   when sample(samplePeriod,samplePeriod) then
     txCount=pre(txCount)+1;
@@ -28,5 +28,5 @@ equation
         Text(extent={{-47,-40},{51,-67}}, textString="n+1", textColor={64,64,64}, fontSize=0),
         Text(extent={{-150,155},{150,125}}, textString="%name", textColor={0,0,255}, fontSize=0)
       }),
-    Documentation(info="<html><p><b>Purpose</b> Clocked one-field frame source for the communication example.</p><p><b>Interfaces</b> Modelica.Blocks.Interfaces.RealOutput u[1]; Modelica.Blocks.Interfaces.IntegerOutput txCount(start=0,fixed=true); Modelica.Blocks.Interfaces.IntegerOutput sequence; Modelica.Blocks.Interfaces.RealOutput sourceTime(unit=\"s\",start=0,fixed=true); Modelica.Blocks.Interfaces.BooleanOutput validIn</p><p><b>Parameters</b> parameter Modelica.Units.SI.Time samplePeriod(min=0)=0.1</p><p><b>Behavior</b> Clocked one-field frame source for the communication example</p><p><b>Initialization</b> The declared start values and initialization equations apply.</p><p><b>Activation and recovery</b> Not applicable.</p><p><b>Limitations</b> Outputs retain the units declared at the interface. Numerical values depend on the supplied input and parameter range.</p><p><b>Observables</b> u, txCount, sequence, sourceTime, validIn</p><p><b>Example</b> <a href=\"modelica://AnomalyLibrary.Examples.DeterministicCommunication\">AnomalyLibrary.Examples.DeterministicCommunication</a></p></html>"));
+    Documentation(info="<html><p>Generate a scalar payload equal to the transmission count. The first frame is produced at <code>samplePeriod</code>, followed by one frame per period. <code>sequence=txCount</code> and <code>sourceTime=samplePeriod*sequence</code>.</p><p>Before the first frame, the count and payload are zero and <code>validIn=false</code>. Use a strictly positive sample period. This helper supplies deterministic inputs for the communication example.</p></html>"));
 end FrameSource;
